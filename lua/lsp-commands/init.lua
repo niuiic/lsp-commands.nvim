@@ -19,10 +19,12 @@ function M._get_item(category, command)
 end
 
 function M._run_command(item)
-	for category, command in pairs(M._commands) do
-		if M._get_item(category, command) == item then
-			category.run()
-			return
+	for category, commands in pairs(M._commands) do
+		for _, command in ipairs(commands) do
+			if M._get_item(category, command) == item then
+				command.run()
+				return
+			end
 		end
 	end
 end
