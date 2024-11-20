@@ -30,7 +30,8 @@ function M._run_command(item)
 end
 
 ---@param category string | nil
-function M.run_command(category)
+---@param silent boolean | nil
+function M.run_command(category, silent)
 	local items = {}
 	if not category then
 		for key, value in pairs(M._commands) do
@@ -55,6 +56,9 @@ function M.run_command(category)
 	end
 
 	if #items == 1 then
+		if not silent then
+			vim.notify(string.format("Running command: %s", items[1]), vim.log.levels.INFO)
+		end
 		M._run_command(items[1])
 		return
 	end
@@ -66,6 +70,9 @@ function M.run_command(category)
 			return
 		end
 
+		if not silent then
+			vim.notify(string.format("Running command: %s", choice), vim.log.levels.INFO)
+		end
 		M._run_command(choice)
 	end)
 end
