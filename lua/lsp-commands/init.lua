@@ -7,47 +7,21 @@ local M = {
 ---@field run fun()
 ---@field is_enabled (fun(): boolean) | nil
 
----@param category string
 ---@param command lsp-commands.Command
-function M.register_command(category, command)
-	M._commands[category] = M._commands[category] or {}
-	table.insert(M._commands[category], command)
+function M.register_command(command)
+	M._commands[command.name] = command
 end
 
-function M._get_item(category, command)
-	return string.format("%s: %s", category, command.name)
-end
-
-function M._run_command(item)
-	for category, commands in pairs(M._commands) do
-		for _, command in ipairs(commands) do
-			if M._get_item(category, command) == item then
-				command.run()
-				return
-			end
-		end
-	end
-end
-
----@param category string | nil
+---@param filter (fun(name): boolean) | nil
 ---@param silent boolean | nil
-function M.run_command(category, silent)
+function M.run_command(filter, silent)
 	local items = {}
-	if not category then
-		for key, value in pairs(M._commands) do
-			if not value.is_enabled or value.is_enabled() then
-				table.insert(items, M._get_item(key, value))
+	for name, command in pairs(M._commands) do
+		if not filter or filter(name) then
+			if not command.is_enabled or command.is_enabled() then
+				table.insert(items, name)
 			end
 		end
-	else
-		items = vim.iter((M._commands[category] or {}))
-			:filter(function(command)
-				return not command.is_enabled or command.is_enabled()
-			end)
-			:map(function(item)
-				return M._get_item(category, item)
-			end)
-			:totable()
 	end
 
 	if #items == 0 then
@@ -59,7 +33,7 @@ function M.run_command(category, silent)
 		if not silent then
 			vim.notify(string.format("Running command: %s", items[1]), vim.log.levels.INFO)
 		end
-		M._run_command(items[1])
+		M._commands[items[1]].run()
 		return
 	end
 
@@ -73,7 +47,7 @@ function M.run_command(category, silent)
 		if not silent then
 			vim.notify(string.format("Running command: %s", choice), vim.log.levels.INFO)
 		end
-		M._run_command(choice)
+		M._commands[choice].run()
 	end)
 end
 
